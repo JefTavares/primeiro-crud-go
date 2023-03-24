@@ -8,6 +8,7 @@ import (
 	"github.com/jeftavares/primeiro-crud-go/src/configuration/validation"
 	"github.com/jeftavares/primeiro-crud-go/src/controller/model/request"
 	"github.com/jeftavares/primeiro-crud-go/src/model"
+	"github.com/jeftavares/primeiro-crud-go/src/view"
 	"go.uber.org/zap"
 )
 
@@ -15,7 +16,7 @@ var (
 	UserDomainInterface model.UserDomainInterface
 )
 
-func CreateUser(c *gin.Context) {
+func (uc *userControllerInterface) CreateUser(c *gin.Context) {
 	logger.Info("Init CreateUser Controller",
 		zap.String("journey", "createUser"),
 		// zap.Field{
@@ -36,13 +37,21 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
+	//Utiliza a interface UserDomain, atravez do contrutor
+	//Exemplo vc não consegue acessar oq é especifico do domain apenas o que esta liberado quando se cria a instancia
+	//Tenta dar um model. e veja
+	//ou domain.
 	domain := model.NewUserDomain(userRequest.Email,
 		userRequest.Password,
 		userRequest.Name,
 		userRequest.Age,
 	)
 
-	if err := domain.CreateUser(); err != nil {
+	domainResult, err := uc.service.CreateUserServices(domain)
+	if err != nil {
+		logger.Error("Error trying to call CreateUser service",
+			err,
+			zap.String("journey", "createUser"))
 		c.JSON(err.Code, err)
 		return
 	}
@@ -54,8 +63,11 @@ func CreateUser(c *gin.Context) {
 	// 	Age:   userRequest.Age,
 	// }
 
-	logger.Info("User created sucessfully", zap.String("journey", "createUser"))
+	logger.Info("CreateUser controller executed successfully",
+		zap.String("userId", domainResult.GetID()),
+		zap.String("journey", "createUser"))
 
 	//c.JSON(http.StatusOK, response)
-	c.String(http.StatusOK, "")
+	//c.String(http.StatusOK, "")
+	c.JSON(http.StatusOK, view.ConvertDomainToResponse(domainResult))
 }
