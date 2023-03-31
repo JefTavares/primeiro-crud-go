@@ -15,7 +15,7 @@ Implementa a interface UserDomain
 func (ud *userDomainService) CreateUserServices(
 	userDomain model.UserDomainInterface,
 ) (model.UserDomainInterface, *rest_err.RestErr) {
-	logger.Info("Init create user Services", zap.String("journey", "createUser"))
+	logger.Info("Init CreateUser Services", zap.String("journey", "CreateUser"))
 
 	userDomain.EncryptPassword()
 
@@ -23,9 +23,16 @@ func (ud *userDomainService) CreateUserServices(
 	//fmt.Println(userDomain.GetPassword())
 	userDomainRepository, err := ud.userRepository.CreateUser(userDomain)
 	if err != nil {
-		logger.Info("Init create model", zap.String("journey", "createUser"))
+		logger.Error("Error trying to call repository", err,
+			zap.String("journey", "CreateUser"),
+		)
 		return nil, err
 	}
 
+	logger.Info(
+		"CreateUser service executed sucessfully",
+		zap.String("userId", userDomainRepository.GetID()),
+		zap.String("journey", "CreateUser"),
+	)
 	return userDomainRepository, nil
 }
